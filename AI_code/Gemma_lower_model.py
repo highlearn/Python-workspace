@@ -1,5 +1,6 @@
-# We will create a response from distilgpt2 model 
+# We will create a response from Gemma model 
 # pip install torch transformers
+
 # using the Hugging Face Transformers library 
 # or the Keras library. These libraries handle 
 # the model loading and inference locally within 
@@ -8,9 +9,9 @@
 import torch
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForCausalLM
-# model_name = "sshleifer/tiny-gpt2"
+# # model_name = "sshleifer/tiny-gpt2"
 
-model_path = "C:\\Users\\paman\\OneDrive\\Desktop\\Python-workspace\\distilgpt2"
+model_path = "C:\\Users\\paman\\OneDrive\\Desktop\\Python-workspace\\gemma-3-1b-it"
 
 dtype = torch.float16 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -19,31 +20,31 @@ tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map="auto", # Automatically distributes the model across available devices (GPU/CPU)
-    torch_dtype=dtype
+    dtype=dtype
     )       
 
-# messages = [
-#     {"role": "user", "content": "Capital of India"}
-# ]
+messages = [
+    {"role": "user", "content": "how is weather in india"}
+]
 
-# Simple text prompt
-prompt = "Capital of India is"
 
-# # Encode the prompt and move to the model's device
+prompt = tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
+prompt += "<start_of_turn>model\n" 
 
-inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+# Encode the prompt and move to the model's device
+inputs = tokenizer.encode(prompt, add_special_tokens=False, return_tensors="pt").to(model.device)
 
 # # Generate the response
 with torch.no_grad():
     outputs = model.generate(
-        **inputs, 
-        max_new_tokens=50,     # Maximum number of tokens to generate
+        inputs, 
+        max_new_tokens=200,     # Maximum number of tokens to generate
         do_sample=True,         # Enable sampling
         temperature=0.7,        # Sampling temperature
         top_k=50,               # Top-k sampling
         top_p=0.95              # Top-p (nucleus) sampling
     )
 
-# # Decode and print only the generated text (exclude the input prompt)
+# Decode and print only the generated text (exclude the input prompt)
 response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-print("\n🧠 Model output:", response)
+print(response)
